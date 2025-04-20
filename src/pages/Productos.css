@@ -1,0 +1,147 @@
+/* Variables de color y estilos base */
+:root {
+  --dorado-suave: #D4AF37;
+  --beige-claro: #F5F5DC;
+  --blanco-roto: #FAF9F6;
+  --gris-perla: #C0C0C0;
+  --text-color: #333;
+  --font-family: 'Arial', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Sección principal */
+.productos-section {
+  background-color: var(--beige-claro);
+}
+
+/* Contenedor centrado y con ancho máximo */
+.productos-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Encabezado de la sección */
+.productos-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+/* Badge para el encabezado */
+.productos-badge {
+  display: inline-block;
+  color: #282828;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 2rem;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+/* Título principal */
+.productos-heading {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  color: var(--dorado-suave);
+  font-family: var(--font-family);
+}
+
+/* Descripción centrada */
+.productos-description {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--text-color);
+  max-width: 800px;
+  margin: 0 auto;
+  font-family: var(--font-family);
+}
+
+/* Contenedor de tarjetas */
+.vertical-card-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding-top: 20px;
+}
+
+/* Estilos para el mapa */
+.map-section {
+  padding: 3rem 2rem;
+  background: var(--blanco-roto);
+  font-family: 'Arial', sans-serif;
+  color: var(--text-color);
+}
+
+.map-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.map-info {
+  margin-bottom: 1.5rem;
+}
+
+.map-info h2 {
+  font-size: 2rem;
+  color: var(--dorado-suave);
+  margin-bottom: 0.5rem;
+}
+
+.map-info p {
+  font-size: 1.1rem;
+  margin-bottom: 0.3rem;
+}
+
+.contact-map {
+  width: 100%;
+  height: 450px;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+
+/* Media queries para responsividad */
+@media (max-width: 768px) {
+  .productos-heading {
+    font-size: 2rem;
+  }
+  
+  .productos-description {
+    font-size: 1rem;
+    padding: 0 10px;
+  }
+  .contact-map {
+    height: 300px;
+  }
+  
+}
+
+@media (max-width: 480px) {
+  .productos-heading {
+    font-size: 1.75rem;
+  }
+  
+  .productos-badge {
+    font-size: 0.8rem;
+    padding: 4px 10px;
+  }
+  .map-info h2 {
+    font-size: 1.75rem;
+  }
+  .map-info p {
+    font-size: 1rem;
+  }
+  .contact-map {
+    height: 250px;
+  }
+}
+
+

@@ -1,0 +1,327 @@
+import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { MdDelete } from "react-icons/md";
+import { removeFromCart, updateCartQuantity, setShippingInfo } from "../store/cartSlice";
+import PayPalPayment from "../components/PayPalPayment";
+import PayPalPaymentCard from "../components/PayPalPaymentCard";
+import { useNavigate } from "react-router-dom";
+import "./Cart.css";
+
+// Función para formatear el valor en COP
+function formatCOP(value) {
+  return value.toLocaleString("es-CO", {
+    style: "currency",
+    currency: "COP",
+  });
+}
+
+function Cart() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const cartItems = useSelector((state) => state.cart.cartItems);
+  const shippingInfoGlobal = useSelector((state) => state.cart.shippingInfo);
+
+  // Estado para el formulario de shipping info (global para productos)
+  const [showShippingForm, setShowShippingForm] = useState(true);
+  const [shippingForm, setShippingForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    deliveryTime: ""
+  });
+
+  // Determinar si el carrito es de servicios o de productos
+  const firstItem = cartItems[0];
+  const detailsFirst = firstItem
+    ? firstItem.reservationDetails || firstItem.productDetails || {}
+    : {};
+  const isService =
+    detailsFirst.category &&
+    detailsFirst.category.toLowerCase().includes("servicio");
+
+  // Calcular totales
+  let totalCOP = 0;
+  cartItems.forEach((item) => {
+    const details = item.reservationDetails || item.productDetails || {};
+    // Si no existe totalPrice, usamos sellingPrice
+    const price = details.totalPrice || details.sellingPrice || 0;
+    const qty = item.quantity || 1;
+    totalCOP += price * qty;
+  });
+  const EXCHANGE_RATE = 4000;
+  const totalUSD = (totalCOP / EXCHANGE_RATE).toFixed(2);
+
+  // Para servicios se cobra el 20%; para productos se cobra el 100%
+  const depositCOP = isService ? totalCOP * 0.2 : totalCOP;
+  const depositUSD = (depositCOP / EXCHANGE_RATE).toFixed(2);
+
+  const handleRemove = (productId) => {
+    dispatch(removeFromCart({ productId }));
+  };
+
+  const handleChangeQty = (productId, newQty) => {
+    if (newQty < 1) newQty = 1;
+    dispatch(updateCartQuantity({ productId, quantity: newQty }));
+  };
+
+  // Manejador para enviar el formulario de shipping info
+  const handleShippingSubmit = (e) => {
+    e.preventDefault();
+    dispatch(setShippingInfo(shippingForm));
+    setShowShippingForm(false);
+  };
+
+  return (
+    <div className="uniqueCart-container">
+      {cartItems.length === 0 ? (
+        <div className="uniqueCart-emptyContainer">
+          <p className="uniqueCart-emptyMessage">No hay productos en tu carrito.</p>
+        </div>
+      ) : (
+        <div className="uniqueCart-content">
+          <div className="uniqueCart-productList">
+            {cartItems.map((item, idx) => {
+              // Unificar la información: si es servicio se usa reservationDetails, si no, productDetails.
+              const details = item.reservationDetails || item.productDetails || {};
+              const price = details.totalPrice || details.sellingPrice || 0;
+              const qty = item.quantity || 1;
+              const subtotal = price * qty;
+              return (
+                <div key={idx} className="uniqueCart-productCard">
+                  <div className="uniqueCart-productImage">
+                    <img
+                      src={details.productImage || "ruta/por/defecto.jpg"}
+                      alt={details.productName || "Producto"}
+                      className="uniqueCart-productImg"
+                    />
+                    <div
+                      className="uniqueCart-deleteButton"
+                      onClick={() => handleRemove(item.productId)}
+                    >
+                      <MdDelete />
+                    </div>
+                  </div>
+                  <div className="uniqueCart-details">
+                    <h2 className="uniqueCart-name">
+                      {details.productName || "Producto"}
+                    </h2>
+                    <p className="uniqueCart-category">
+                      {details.category || "Categoría desconocida"}
+                    </p>
+                    {details.description && (
+                      <p className="uniqueCart-description">
+                        {details.description}
+                      </p>
+                    )}
+                    {details.reservationDate && (
+                      <p className="uniqueCart-reservationDate">
+                        Fecha de Reserva: {details.reservationDate}
+                      </p>
+                    )}
+                    {details.reservationTime && (
+                      <p className="uniqueCart-reservationTime">
+                        Hora de Reserva: {details.reservationTime}
+                      </p>
+                    )}
+                    {details.serviceDuration && (
+                      <p className="uniqueCart-serviceDetail">
+                        Duración: {details.serviceDuration} minutos
+                      </p>
+                    )}
+                    {details.serviceIntensity && (
+                      <p className="uniqueCart-serviceDetail">
+                        Intensidad: {details.serviceIntensity}
+                      </p>
+                    )}
+                    {/* Para servicios, se muestra shippingInfo dentro del item */}
+                    {isService && details.shippingInfo && (
+                      <div className="uniqueCart-shipping">
+                        <p>
+                          <strong>Nombre:</strong> {details.shippingInfo.name}
+                        </p>
+                        <p>
+                          <strong>Email:</strong> {details.shippingInfo.email}
+                        </p>
+                        <p>
+                          <strong>Teléfono:</strong> {details.shippingInfo.phone}
+                        </p>
+                        <p>
+                          <strong>Dirección:</strong> {details.shippingInfo.address}
+                        </p>
+                        {details.shippingInfo.deliveryTime && (
+                          <p>
+                            <strong>Hora de entrega:</strong> {details.shippingInfo.deliveryTime}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    <div className="uniqueCart-quantity">
+                      <label>
+                        <strong>Cantidad:</strong>{" "}
+                        <input
+                          type="number"
+                          min="1"
+                          value={qty}
+                          onChange={(e) =>
+                            handleChangeQty(item.productId, +e.target.value)
+                          }
+                          className="uniqueCart-quantityInput"
+                        />
+                      </label>
+                    </div>
+                    <div className="uniqueCart-price">
+                      <p className="uniqueCart-totalPrice">
+                        Subtotal: {formatCOP(subtotal)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Para productos (no servicios), se muestra siempre la sección de envío */}
+          {!isService && (
+            <div className="uniqueCart-shipping-global">
+              <h3>Detalles de Envío</h3>
+              {shippingInfoGlobal ? (
+                <div className="shipping-info-display">
+                  <p>
+                    <strong>Nombre:</strong> {shippingInfoGlobal.name}
+                  </p>
+                  <p>
+                    <strong>Email:</strong> {shippingInfoGlobal.email}
+                  </p>
+                  <p>
+                    <strong>Teléfono:</strong> {shippingInfoGlobal.phone}
+                  </p>
+                  <p>
+                    <strong>Dirección:</strong> {shippingInfoGlobal.address}
+                  </p>
+                  {shippingInfoGlobal.deliveryTime && (
+                    <p>
+                      <strong>Hora de entrega:</strong> {shippingInfoGlobal.deliveryTime}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <form className="shipping-form" onSubmit={handleShippingSubmit}>
+                  <input
+                    type="text"
+                    placeholder="Nombre"
+                    value={shippingForm.name}
+                    onChange={(e) =>
+                      setShippingForm({ ...shippingForm, name: e.target.value })
+                    }
+                    required
+                  />
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    value={shippingForm.email}
+                    onChange={(e) =>
+                      setShippingForm({ ...shippingForm, email: e.target.value })
+                    }
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="Teléfono"
+                    value={shippingForm.phone}
+                    onChange={(e) =>
+                      setShippingForm({ ...shippingForm, phone: e.target.value })
+                    }
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="Dirección"
+                    value={shippingForm.address}
+                    onChange={(e) =>
+                      setShippingForm({ ...shippingForm, address: e.target.value })
+                    }
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="Hora de entrega (opcional)"
+                    value={shippingForm.deliveryTime}
+                    onChange={(e) =>
+                      setShippingForm({ ...shippingForm, deliveryTime: e.target.value })
+                    }
+                  />
+                  <button type="submit">Guardar</button>
+                </form>
+              )}
+            </div>
+          )}
+
+          <div className="uniqueCart-summary">
+            <h3 className="uniqueCart-totalAmount">
+              Total en COP: {formatCOP(totalCOP)}
+            </h3>
+            <h3 className="uniqueCart-totalAmount">
+              Equivalente en USD: ${totalUSD}
+            </h3>
+            <div className="uniqueCart-depositContainer">
+              <p className="uniqueCart-depositText">
+                {isService
+                  ? "** Solo pagarás el 20% (reserva) **"
+                  : "** Se pagará el 100% **"}
+              </p>
+              <h4 className="uniqueCart-depositAmount">
+                {isService
+                  ? `Reserva (20%): ${formatCOP(depositCOP)} / $${depositUSD} USD`
+                  : `Total: ${formatCOP(totalCOP)} / $${totalUSD} USD`}
+              </h4>
+            </div>
+            <div className="uniqueCart-buttonsContainer">
+              {isService ? (
+                <>
+                  <div className="uniqueCart-buttonItem">
+                    <PayPalPayment
+                      product={{
+                        description: "Reserva 20% - PayPal",
+                        cost: depositUSD,
+                      }}
+                    />
+                  </div>
+                  <div className="uniqueCart-buttonItem">
+                    <PayPalPaymentCard
+                      product={{
+                        description: "Reserva 20% - Tarjeta",
+                        cost: depositUSD,
+                      }}
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="uniqueCart-buttonItem">
+                    <PayPalPayment
+                      product={{
+                        description: "Pago 100% - PayPal",
+                        cost: totalUSD,
+                      }}
+                    />
+                  </div>
+                  <div className="uniqueCart-buttonItem">
+                    <PayPalPaymentCard
+                      product={{
+                        description: "Pago 100% - Tarjeta",
+                        cost: totalUSD,
+                      }}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default Cart;

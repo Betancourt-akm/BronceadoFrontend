@@ -1,0 +1,243 @@
+/* Variables de colores */
+:root {
+  --dorado-suave: #D4AF37;
+  --beige-claro: #F5F5DC;
+  --blanco-roto: #FAF9F6;
+  --gris-perla: #C0C0C0;
+  --brand-hover: #B8982B;
+  --text-color: #282828;
+}
+
+/* Estilos globales */
+body {
+  background-color: var(--beige-claro);
+  color: var(--text-color);
+  font-family: 'Arial', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.home-main {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* Hero Section */
+.hero-section {
+  background-color: var(--blanco-roto);
+  padding: 60px 20px;
+  color: var(--text-color);
+  text-align: center;
+}
+
+.hero-section h2 {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+}
+
+.hero-section p {
+  font-size: 1.25rem;
+  max-width: 800px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* About Section */
+.about-section {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--text-color);
+}
+
+.about-section h2 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+  color: var(--dorado-suave);
+}
+
+.about-section p {
+  font-size: 1.125rem;
+  max-width: 800px;
+  margin: 0 auto 40px;
+  line-height: 1.6;
+}
+
+.about-images {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+/* Se modificó el tamaño para videos grandes y centrados */
+.about-images video {
+  width: 100%;
+  max-width: 600px;
+  border-radius: 8px;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+}
+
+.about-videos {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  border-radius: 8px;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Services Section */
+.services-section {
+  background-color: var(--gris-perla);
+  padding: 60px 20px;
+  color: var(--blanco-roto);
+  text-align: center;
+}
+
+.services-section p {
+  font-size: 1.125rem;
+  max-width: 800px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Extra Links */
+.extra-links {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.extra-links a {
+  display: inline-block;
+  text-decoration: none;
+  font-size: 1.125rem;
+  background-color: #009739;
+  color: #D4AF37;
+  padding: 12px 24px;
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+  /* Animación de pulsación para un brillo continuo */
+  animation: pulse 3s infinite;
+  transition: color 0.3s ease, background-color 0.3s ease;
+}
+
+/* Pseudo-elemento para el efecto de destello */
+.extra-links a::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: skewX(-25deg);
+}
+
+/* Al pasar el cursor, se activa el destello */
+.extra-links a:hover::before {
+  animation: shine 0.75s forwards;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 5px #D4AF37, 0 0 10px #D4AF37;
+  }
+  50% {
+    box-shadow: 0 0 20px #D4AF37, 0 0 30px #D4AF37;
+  }
+}
+
+@keyframes shine {
+  from {
+    left: -75%;
+  }
+  to {
+    left: 125%;
+  }
+}
+
+
+/* Products Section */
+.products-section {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--text-color);
+}
+
+.products-section h2 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+  color: var(--dorado-suave);
+}
+
+.products-section p {
+  font-size: 1.125rem;
+  max-width: 800px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Whatsapp Invite */
+.whatsapp-invite-container {
+  text-align: center;
+  margin: 40px 20px;
+}
+
+.whatsapp-invite-link {
+  background-color: var(--dorado-suave);
+  color: var(--blanco-roto);
+  padding: 12px 24px;
+  border-radius: 9999px;
+  text-decoration: none;
+  font-size: 1.125rem;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.whatsapp-invite-link:hover {
+  background-color: var(--brand-hover);
+  transform: scale(1.05);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .hero-section h2 {
+    font-size: 2rem;
+  }
+  .hero-section p,
+  .about-section p,
+  .products-section p {
+    font-size: 1rem;
+    padding: 0 10px;
+  }
+  .about-images,
+  .about-videos {
+    flex-direction: column;
+  }
+  .contact-map {
+    height: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section h2 {
+    font-size: 1.75rem;
+  }
+  .hero-section p {
+    font-size: 0.95rem;
+  }
+  .about-section h2,
+  .products-section h2,
+  .map-info h2 {
+    font-size: 1.75rem;
+  }
+  .map-info p {
+    font-size: 1rem;
+  }
+  .contact-map {
+    height: 250px;
+  }
+}

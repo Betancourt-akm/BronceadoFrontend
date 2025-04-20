@@ -1,0 +1,387 @@
+// src/pages/Cart.js
+
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import displayINRCurrency from '../helpers/displayCurrency';
+import { MdDelete } from 'react-icons/md';
+import './Cart.css';
+import { removeFromCart, updateCartQuantity } from '../store/cartSlice'; // Importa updateCartQuantity
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import SummaryApi from '../common'; // Asegúrate de importar correctamente
+
+const Cart = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const cartItems = useSelector((state) => state.cart.cartItems);
+
+  const [buyerEmail, setBuyerEmail] = useState('');
+  const [buyerName, setBuyerName] = useState('');
+  const [buyerLastName, setBuyerLastName] = useState('');
+  const [docType, setDocType] = useState('CC');
+  const [docNumber, setDocNumber] = useState('');
+
+  // Estado para controlar si el script de ePayco está cargado
+  const [ePaycoLoaded, setEPaycoLoaded] = useState(false);
+
+  // Verificar si ePayco está disponible en window
+  useEffect(() => {
+    if (window.ePayco) {
+      setEPaycoLoaded(true);
+    } else {
+      console.error('ePayco no está disponible en window.');
+    }
+  }, []);
+
+  // Calcular el total del carrito
+  const calculateTotal = () => {
+    let total = 0;
+    cartItems.forEach((item) => {
+      if (
+        item &&
+        item.reservationDetails &&
+        typeof item.reservationDetails.totalPrice === 'number' &&
+        typeof item.quantity === 'number'
+      ) {
+        total += item.reservationDetails.totalPrice * item.quantity;
+      }
+    });
+    return total;
+  };
+
+  const totalAmount = calculateTotal();
+
+  // Calcular el 10% del totalAmount para el pago y redondear al entero más cercano
+  const paymentAmount = Math.round(totalAmount * 0.10);
+
+  // Función para eliminar un producto del carrito
+  const handleRemoveFromCart = (productId) => {
+    dispatch(removeFromCart({ productId }));
+  };
+
+  // Función para manejar el cambio de cantidad
+  const handleQuantityChange = (productId, quantity) => {
+    if (quantity < 1) quantity = 1; // Evitar cantidades menores a 1
+    dispatch(updateCartQuantity({ productId, quantity }));
+  };
+
+  // Función para verificar si es un ObjectId válido
+  const isValidObjectId = (id) => {
+    return /^[0-9a-fA-F]{24}$/.test(id);
+  };
+
+  // Función para manejar el pago con ePayco
+  const handlePayment = async (e) => {
+    e.preventDefault();
+
+    // Validaciones básicas
+    if (!buyerEmail || !buyerName || !buyerLastName || !docType || !docNumber) {
+      alert('Por favor, completa todos los campos del comprador.');
+      return;
+    }
+
+    // Validar los productId y las fechas
+    for (const item of cartItems) {
+      if (!isValidObjectId(item.productId)) {
+        alert(`El productId ${item.productId} no es válido. Por favor, elimina este producto del carrito.`);
+        return;
+      }
+
+      const startDate = new Date(item.reservationDetails.startDate);
+      const endDate = new Date(item.reservationDetails.endDate);
+
+      if (endDate <= startDate) {
+        alert(`La fecha de fin debe ser posterior a la fecha de inicio para el producto con ID: ${item.productId}`);
+        return;
+      }
+    }
+
+    try {
+      // Preparar los datos del pago
+      const paymentData = {
+        amount: paymentAmount.toString(),
+        currency: 'COP',
+        buyerEmail,
+        buyerName,
+        buyerLastName,
+        docType,
+        docNumber,
+        reservationDetails: cartItems.map((item) => ({
+          productId: item.productId,
+          city: item.reservationDetails.city,
+          planType: item.reservationDetails.planType,
+          planOption: item.reservationDetails.planOption,
+          startDate: item.reservationDetails.startDate,
+          startTime: item.reservationDetails.startTime,
+          endDate: item.reservationDetails.endDate,
+          endTime: item.reservationDetails.endTime,
+          additionalProducts: item.reservationDetails.additionalProducts,
+          totalPrice: item.reservationDetails.totalPrice,
+          quantity: item.quantity || 1, // Asegurarse de incluir la cantidad
+        })),
+      };
+
+      // Log para verificar los datos enviados
+      console.log('Datos de pago que se enviarán al backend:', paymentData);
+
+      // Enviar la solicitud al backend para obtener los datos de configuración de ePayco
+      const response = await axios.post(
+        SummaryApi.processPayment.url, // Usar SummaryApi correctamente configurado
+        paymentData,
+        { withCredentials: true } // Asegura que las cookies se envíen si es necesario
+      );
+
+      // Log para verificar la respuesta del backend
+      console.log('Respuesta del backend:', response.data);
+
+      // Manejar la respuesta del pago
+      if (response.data.paymentData) {
+        // Log para verificar los datos recibidos
+        console.log('Datos de configuración de ePayco recibidos:', response.data.paymentData);
+
+        // Configurar ePayco Checkout
+        if (window.ePayco && window.ePayco.checkout) {
+          const handler = window.ePayco.checkout.configure({
+            key: response.data.paymentData.key,
+            test: response.data.paymentData.test,
+            // Puedes agregar más opciones de configuración si es necesario
+          });
+
+          // Abrir el checkout pasando los paymentData
+          handler.open(response.data.paymentData);
+          console.log('Checkout de ePayco abierto correctamente.');
+        } else {
+          console.error('ePayco no está definido en el objeto window.');
+          alert('Error al iniciar el sistema de pago. Por favor, intenta de nuevo más tarde.');
+        }
+      } else {
+        // Manejar errores o estados inesperados
+        console.error('Error en el pago:', response.data);
+        const errorMessage = response.data.error || 'Error desconocido';
+        alert(`Hubo un error al procesar tu pago: ${errorMessage}`);
+      }
+    } catch (error) {
+      console.error('Error al procesar el pago:', error.response || error);
+
+      // Verificar si hay una respuesta del servidor
+      if (error.response) {
+        console.log('Datos de error de la respuesta:', error.response.data);
+        const errorMessage = error.response.data.error || error.response.data.message || 'Error desconocido';
+        alert(`Hubo un error al procesar tu pago: ${errorMessage}`);
+      } else if (error.request) {
+        // La solicitud fue hecha pero no se recibió respuesta
+        console.log('No se recibió respuesta del servidor:', error.request);
+        alert('No se recibió respuesta del servidor. Por favor, intenta de nuevo más tarde.');
+      } else {
+        // Algo sucedió al configurar la solicitud
+        console.log('Error al configurar la solicitud:', error.message);
+        alert(`Hubo un error al procesar tu pago: ${error.message}`);
+      }
+    }
+  };
+
+  return (
+    <div className="uniqueCart-container">
+      {!cartItems || cartItems.length === 0 ? (
+        <div className="uniqueCart-emptyContainer">
+          <p className="uniqueCart-emptyMessage">
+            No hay motos en la reserva.
+          </p>
+        </div>
+      ) : (
+        <div className="uniqueCart-content">
+          {/* Lista de productos */}
+          <div className="uniqueCart-productList">
+            {cartItems.map((item, index) => (
+              <div key={index} className="uniqueCart-productCard">
+                <div className="uniqueCart-productImage">
+                  <img
+                    src={
+                      item.reservationDetails.productImage ||
+                      'ruta/por/defecto.jpg'
+                    }
+                    alt={
+                      item.reservationDetails.productName || 'Producto'
+                    }
+                    className="uniqueCart-productImg"
+                  />
+                  <div
+                    className="uniqueCart-deleteButton"
+                    onClick={() => handleRemoveFromCart(item.productId)}
+                  >
+                    <MdDelete />
+                  </div>
+                </div>
+                <div className="uniqueCart-details">
+                  <h2 className="uniqueCart-name">
+                    {item.reservationDetails.productName || 'Producto'}
+                  </h2>
+                  <p className="uniqueCart-category">
+                    {item.reservationDetails.category ||
+                      'Categoría desconocida'}
+                  </p>
+                  {/* Mostrar los detalles de la reserva */}
+                  <div className="uniqueCart-reservationDetails">
+                    <p>
+                      <strong>Ciudad:</strong>{' '}
+                      {item.reservationDetails.city || 'No especificado'}
+                    </p>
+                    <p>
+                      <strong>Plan:</strong>{' '}
+                      {item.reservationDetails.planType || 'No especificado'}
+                    </p>
+                    <p>
+                      <strong>Opción del Plan:</strong>{' '}
+                      {item.reservationDetails.planOption ||
+                        'No especificado'}
+                    </p>
+                    <p>
+                      <strong>Fecha de Inicio:</strong>{' '}
+                      {item.reservationDetails.startDate ||
+                        'No especificado'}
+                    </p>
+                    <p>
+                      <strong>Hora de Inicio:</strong>{' '}
+                      {item.reservationDetails.startTime ||
+                        'No especificado'}
+                    </p>
+                    <p>
+                      <strong>Fecha de Fin:</strong>{' '}
+                      {item.reservationDetails.endDate ||
+                        'No especificado'}
+                    </p>
+                    <p>
+                      <strong>Hora de Fin:</strong>{' '}
+                      {item.reservationDetails.endTime ||
+                        'No especificado'}
+                    </p>
+                    <p>
+                      <strong>Productos Adicionales:</strong>{' '}
+                      {item.reservationDetails.additionalProducts?.join(
+                        ', '
+                      ) || 'Ninguno'}
+                    </p>
+                  </div>
+                  {/* Campo para seleccionar la cantidad */}
+                  <div className="uniqueCart-quantity">
+                    <label>
+                      <strong>Cantidad:</strong>{' '}
+                      <input
+                        type="number"
+                        min="1"
+                        value={item.quantity || 1}
+                        onChange={(e) =>
+                          handleQuantityChange(
+                            item.productId,
+                            parseInt(e.target.value)
+                          )
+                        }
+                        className="uniqueCart-quantityInput"
+                      />
+                    </label>
+                  </div>
+                  <div className="uniqueCart-price">
+                    <p className="uniqueCart-totalPrice">
+                      Subtotal: {displayINRCurrency(
+                        (item.reservationDetails.totalPrice || 0) * (item.quantity || 1)
+                      )} COP
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Mostrar el total general y el 10% a pagar */}
+          <div className="uniqueCart-summary">
+            <h3 className="uniqueCart-totalAmount">
+              Total: {displayINRCurrency(totalAmount)} COP
+            </h3>
+            <h3 className="uniqueCart-paymentAmount">
+              Adelanto (10%): {displayINRCurrency(paymentAmount)} COP
+            </h3>
+          </div>
+
+          {/* Formulario de pago */}
+          <div className="uniqueCart-paymentForm">
+            <h2>Pagar con ePayco</h2>
+            <form onSubmit={handlePayment}>
+              <div className="uniqueCart-formGroup">
+                <label>Nombre:</label>
+                <input
+                  type="text"
+                  value={buyerName}
+                  onChange={(e) => {
+                    setBuyerName(e.target.value);
+                    console.log('buyerName:', e.target.value);
+                  }}
+                  required
+                />
+              </div>
+              <div className="uniqueCart-formGroup">
+                <label>Apellido:</label>
+                <input
+                  type="text"
+                  value={buyerLastName}
+                  onChange={(e) => {
+                    setBuyerLastName(e.target.value);
+                    console.log('buyerLastName:', e.target.value);
+                  }}
+                  required
+                />
+              </div>
+              <div className="uniqueCart-formGroup">
+                <label>Correo electrónico:</label>
+                <input
+                  type="email"
+                  value={buyerEmail}
+                  onChange={(e) => {
+                    setBuyerEmail(e.target.value);
+                    console.log('buyerEmail:', e.target.value);
+                  }}
+                  required
+                />
+              </div>
+              <div className="uniqueCart-formGroup">
+                <label>Tipo de documento:</label>
+                <select
+                  value={docType}
+                  onChange={(e) => {
+                    setDocType(e.target.value);
+                    console.log('docType:', e.target.value);
+                  }}
+                  required
+                >
+                  <option value="CC">Cédula de ciudadanía</option>
+                  <option value="CE">Cédula de extranjería</option>
+                  <option value="TI">Tarjeta de identidad</option>
+                  <option value="PPN">Pasaporte</option>
+                </select>
+              </div>
+              <div className="uniqueCart-formGroup">
+                <label>Número de documento:</label>
+                <input
+                  type="text"
+                  value={docNumber}
+                  onChange={(e) => {
+                    setDocNumber(e.target.value);
+                    console.log('docNumber:', e.target.value);
+                  }}
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                className="uniqueCart-paymentButton"
+              >
+                Pagar
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Cart;

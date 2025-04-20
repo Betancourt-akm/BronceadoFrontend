@@ -1,0 +1,172 @@
+
+
+import React from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { MdDelete } from "react-icons/md";
+import { removeFromCart, updateCartQuantity } from "../store/cartSlice";
+
+
+import PayPalPayment from "../components/PayPalPayment";       
+import PayPalPaymentCard from "../components/PayPalPaymentCard"; 
+
+import "./Cart.css"; 
+
+
+function formatCOP(value) {
+  return value.toLocaleString("es-CO", {
+    style: "currency",
+    currency: "COP",
+  });
+}
+
+function Cart() {
+  const dispatch = useDispatch();
+  const cartItems = useSelector((state) => state.cart.cartItems);
+
+  
+  let totalCOP = 0;
+  cartItems.forEach((item) => {
+    const price = item.reservationDetails?.totalPrice || 0;
+    const qty = item.quantity || 1;
+    totalCOP += price * qty;
+  });
+
+ 
+  const EXCHANGE_RATE = 4000;
+  const totalUSD = (totalCOP / EXCHANGE_RATE).toFixed(2);
+
+
+  const RESERVATION_PERCENTAGE = 0.1; 
+  const depositCOP = totalCOP * RESERVATION_PERCENTAGE;
+  const depositUSD = (depositCOP / EXCHANGE_RATE).toFixed(2);
+
+ 
+  const handleRemove = (productId) => {
+    dispatch(removeFromCart({ productId }));
+  };
+
+
+  const handleChangeQty = (productId, newQty) => {
+    if (newQty < 1) newQty = 1;
+    dispatch(updateCartQuantity({ productId, quantity: newQty }));
+  };
+
+  return (
+    <div className="uniqueCart-container">
+      {cartItems.length === 0 ? (
+        <div className="uniqueCart-emptyContainer">
+          <p className="uniqueCart-emptyMessage">
+            No hay productos en tu carrito.
+          </p>
+        </div>
+      ) : (
+        <div className="uniqueCart-content">
+       
+          <div className="uniqueCart-productList">
+            {cartItems.map((item, idx) => {
+              const price = item.reservationDetails?.totalPrice || 0;
+              const qty = item.quantity || 1;
+              const subtotal = price * qty;
+
+              return (
+                <div key={idx} className="uniqueCart-productCard">
+                  <div className="uniqueCart-productImage">
+                    <img
+                      src={
+                        item.reservationDetails?.productImage ||
+                        "ruta/por/defecto.jpg"
+                      }
+                      alt={
+                        item.reservationDetails?.productName || "Producto"
+                      }
+                      className="uniqueCart-productImg"
+                    />
+                    <div
+                      className="uniqueCart-deleteButton"
+                      onClick={() => handleRemove(item.productId)}
+                    >
+                      <MdDelete />
+                    </div>
+                  </div>
+                  <div className="uniqueCart-details">
+                    <h2 className="uniqueCart-name">
+                      {item.reservationDetails?.productName || "Producto"}
+                    </h2>
+                    <p className="uniqueCart-category">
+                      {item.reservationDetails?.category ||
+                        "Categoría desconocida"}
+                    </p>
+                    <div className="uniqueCart-quantity">
+                      <label>
+                        <strong>Cantidad:</strong>{" "}
+                        <input
+                          type="number"
+                          min="1"
+                          value={qty}
+                          onChange={(e) =>
+                            handleChangeQty(item.productId, +e.target.value)
+                          }
+                          className="uniqueCart-quantityInput"
+                        />
+                      </label>
+                    </div>
+                    <div className="uniqueCart-price">
+                      <p className="uniqueCart-totalPrice">
+                        Subtotal: {formatCOP(subtotal)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+         
+          <div className="uniqueCart-summary">
+            <h3 className="uniqueCart-totalAmount">
+              Total en COP: {formatCOP(totalCOP)}
+            </h3>
+            <h3 className="uniqueCart-totalAmount">
+              Equivalente en USD: ${totalUSD}
+            </h3>
+
+           
+            <div className="uniqueCart-depositContainer">
+              <p className="uniqueCart-depositText">
+                ** Solo pagarás el 10% (reserva) **
+              </p>
+              <h4 className="uniqueCart-depositAmount">
+                Reserva (10%): {formatCOP(depositCOP)} / ${depositUSD} USD
+              </h4>
+            </div>
+
+          
+            <div className="uniqueCart-buttonsContainer">
+            
+              <div className="uniqueCart-buttonItem">
+                <PayPalPayment
+                  product={{
+                    description: "Reserva 10% - PayPal",
+                    cost: depositUSD,
+                  }}
+                />
+              </div>
+
+        
+              <div className="uniqueCart-buttonItem">
+                <PayPalPaymentCard
+                  product={{
+                    description: "Reserva 10% - Tarjeta",
+                    cost: depositUSD,
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default Cart;

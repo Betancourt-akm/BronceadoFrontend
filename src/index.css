@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: 'Playfair Display', 'Cormorant Garamond', 'Merriweather', serif; /* Fuentes con estilo elegante */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  @apply bg-[#F5F5DC] text-gray-900; /* Fondo rosado y texto oscuro */
+}
+
+/* Código con fuente especial */
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}

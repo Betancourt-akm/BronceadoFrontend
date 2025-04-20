@@ -1,0 +1,51 @@
+import React from 'react';
+import "./Servicios.css";
+import { services } from './db';
+
+
+
+
+function Servicios() {
+  return (
+    <div>
+      <header className='header_web'>
+        <h2>Servicios</h2>
+      </header>
+
+    
+    
+
+<section id="services" className="bronceado-section">
+      <div className="bronceado-container">
+        <div className="bronceado-text-center">
+          <div className="bronceado-badge">Nuestros Servicios</div>
+          <h2 className="bronceado-heading">Experiencias de Bronceado Únicas</h2>
+          <p className="bronceado-description">
+            Descubre una variedad de tratamientos de bronceado diseñados para darte un brillo natural y duradero. Desde sesiones de bronceado con sol hasta técnicas innovadoras, ofrecemos lo mejor para ti.
+          </p>
+        </div>
+
+        <div className="bronceado-grid">
+          {services.map((service, index) => (
+            <div key={index} className="bronceado-card">
+              <img src="/placeholder.svg" alt={service.title} className="bronceado-card-image" />
+              <h3 className="bronceado-card-title">{service.title}</h3>
+              <p className="bronceado-card-duration">Duración: {service.duration}</p>
+              <p className="bronceado-card-price">Precio: {service.price}</p>
+              <ul className="bronceado-card-includes">
+                {service.includes.map((item, i) => (
+                  <li key={i}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+ 
+    </div>
+  );
+}
+
+export default Servicios;

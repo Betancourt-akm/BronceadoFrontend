@@ -1,0 +1,323 @@
+:root {
+  --dorado-suave: #D4AF37;
+  --beige-claro: #F5F5DC;
+  --blanco-roto: #FAF9F6;
+  --gris-perla: #C0C0C0;
+  --text-color: #282828;
+  --accent-color: #B8982B;
+}
+
+body {
+  background-color: var(--beige-claro);
+  font-family: 'Arial', sans-serif;
+  margin: 0;
+  padding: 0;
+  color: var(--text-color);
+}
+
+.product-details-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.loading-text {
+  text-align: center;
+  font-size: 1.5rem;
+  color: var(--dorado-suave);
+}
+
+.product-details-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+@media (min-width: 1024px) {
+  .product-details-wrapper {
+    flex-direction: row;
+  }
+}
+
+/* LEFT SECTION: Imágenes */
+.left-section {
+  flex: 1;
+  margin-right: 20px;
+}
+
+.product-images {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.product-main-image {
+  position: relative;
+  background-color: #e0e0e0;
+  height: 400px;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.main-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.zoomed-image {
+  position: absolute;
+  top: 0;
+  right: -510px;
+  width: 500px;
+  height: 400px;
+  background-color: #e0e0e0;
+  overflow: hidden;
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .zoomed-image {
+    display: block;
+  }
+}
+
+.zoomed-content {
+  width: 500px;
+  height: 400px;
+  background-size: 200%;
+  background-repeat: no-repeat;
+}
+
+.product-thumbnails {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.thumbnail-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+/* RIGHT SECTION: Información y Reserva */
+.right-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.product-info {
+  background: var(--blanco-roto);
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.brand-name {
+  color: var(--dorado-suave);
+  background-color: rgba(212, 175, 55, 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+.product-title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.product-category {
+  font-size: 1rem;
+  color: var(--gris-perla);
+  text-transform: capitalize;
+  margin-bottom: 16px;
+}
+
+.product-pricing {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.selling-price {
+  color: var(--dorado-suave);
+  font-size: 1.75rem;
+  font-weight: bold;
+}
+
+.original-price {
+  color: var(--gris-perla);
+  text-decoration: line-through;
+}
+
+.product-description {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.service-details p {
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+/* Reserva / Formulario */
+.reservation-form {
+  background: var(--blanco-roto);
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.form-heading {
+  text-align: center;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: var(--dorado-suave);
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.form-group input {
+  padding: 8px;
+  border: 1px solid var(--gris-perla);
+  border-radius: 4px;
+  font-size: 1rem;
+  color: var(--text-color);
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--dorado-suave);
+  box-shadow: 0 0 0 1px var(--dorado-suave);
+}
+
+.reserve-button {
+  width: 100%;
+  padding: 12px 24px;
+  background-color: var(--dorado-suave);
+  color: var(--blanco-roto);
+  font-weight: bold;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  display: block;
+  margin: 0 auto;
+}
+
+.reserve-button:hover {
+  background-color: var(--accent-color);
+  transform: scale(1.05);
+}
+
+/* Purchase Section (para productos) */
+.purchase-section {
+  text-align: center;
+}
+
+.add-to-cart-button {
+  padding: 12px 24px;
+  background-color: var(--dorado-suave);
+  color: var(--blanco-roto);
+  font-weight: bold;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.add-to-cart-button:hover {
+  background-color: var(--accent-color);
+}
+
+/* Secciones adicionales (Tarifas, Especificaciones, Final) */
+/* Para servicios se pueden omitir o mostrar en otra sección */
+.specifications-section,
+.final-section {
+  margin-top: 32px;
+  text-align: center;
+}
+
+.final-section-title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 16px;
+  color: var(--dorado-suave);
+}
+
+.final-section-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.final-section-button {
+  padding: 12px 24px;
+  background-color: #28a745;
+  color: #fff;
+  font-weight: bold;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+}
+
+.final-section-button:hover {
+  background-color: #218838;
+}
+
+.final-section-text {
+  max-width: 600px;
+  margin: 0 auto;
+  font-size: 1.1rem;
+  color: var(--text-color);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .product-details-wrapper {
+    flex-direction: column;
+  }
+  .left-section,
+  .right-section {
+    margin-right: 0;
+  }
+  .zoomed-image {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-title {
+    font-size: 1.75rem;
+  }
+  .product-info,
+  .reservation-form {
+    padding: 1rem;
+  }
+  .reserve-button,
+  .add-to-cart-button {
+    font-size: 0.9rem;
+    padding: 10px 20px;
+  }
+}

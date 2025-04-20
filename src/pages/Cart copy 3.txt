@@ -1,0 +1,201 @@
+import React from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { MdDelete } from "react-icons/md";
+import { removeFromCart, updateCartQuantity } from "../store/cartSlice";
+
+import PayPalPayment from "../components/PayPalPayment";
+import PayPalPaymentCard from "../components/PayPalPaymentCard";
+
+import "./Cart.css";
+
+// Función para formatear el valor en COP
+function formatCOP(value) {
+  return value.toLocaleString("es-CO", {
+    style: "currency",
+    currency: "COP",
+  });
+}
+
+function Cart() {
+  const dispatch = useDispatch();
+  const cartItems = useSelector((state) => state.cart.cartItems);
+
+  // Se unifica la información: si existe reservationDetails se usa, si no, se usa productDetails
+  let totalCOP = 0;
+  cartItems.forEach((item) => {
+    const details = item.reservationDetails || item.productDetails || {};
+    const price = details.totalPrice || 0;
+    const qty = item.quantity || 1;
+    totalCOP += price * qty;
+  });
+
+  const EXCHANGE_RATE = 4000;
+  const totalUSD = (totalCOP / EXCHANGE_RATE).toFixed(2);
+
+  // Reserva del 20%
+  const RESERVATION_PERCENTAGE = 0.2;
+  const depositCOP = totalCOP * RESERVATION_PERCENTAGE;
+  const depositUSD = (depositCOP / EXCHANGE_RATE).toFixed(2);
+
+  const handleRemove = (productId) => {
+    dispatch(removeFromCart({ productId }));
+  };
+
+  const handleChangeQty = (productId, newQty) => {
+    if (newQty < 1) newQty = 1;
+    dispatch(updateCartQuantity({ productId, quantity: newQty }));
+  };
+
+  return (
+    <div className="uniqueCart-container">
+      {cartItems.length === 0 ? (
+        <div className="uniqueCart-emptyContainer">
+          <p className="uniqueCart-emptyMessage">No hay productos en tu carrito.</p>
+        </div>
+      ) : (
+        <div className="uniqueCart-content">
+          <div className="uniqueCart-productList">
+            {cartItems.map((item, idx) => {
+              // Unificar la información: para servicios se encuentra en reservationDetails, para productos en productDetails.
+              const details = item.reservationDetails || item.productDetails || {};
+              const price = details.totalPrice || 0;
+              const qty = item.quantity || 1;
+              const subtotal = price * qty;
+
+              return (
+                <div key={idx} className="uniqueCart-productCard">
+                  <div className="uniqueCart-productImage">
+                    <img
+                      src={
+                        details.productImage ||
+                        "ruta/por/defecto.jpg"
+                      }
+                      alt={details.productName || "Producto"}
+                      className="uniqueCart-productImg"
+                    />
+                    <div
+                      className="uniqueCart-deleteButton"
+                      onClick={() => handleRemove(item.productId)}
+                    >
+                      <MdDelete />
+                    </div>
+                  </div>
+                  <div className="uniqueCart-details">
+                    <h2 className="uniqueCart-name">
+                      {details.productName || "Producto"}
+                    </h2>
+                    <p className="uniqueCart-category">
+                      {details.category || "Categoría desconocida"}
+                    </p>
+                    {details.description && (
+                      <p className="uniqueCart-description">
+                        {details.description}
+                      </p>
+                    )}
+                    {details.reservationDate && (
+                      <p className="uniqueCart-reservationDate">
+                        Fecha de Reserva: {details.reservationDate}
+                      </p>
+                    )}
+                    {details.reservationTime && (
+                      <p className="uniqueCart-reservationTime">
+                        Hora de Reserva: {details.reservationTime}
+                      </p>
+                    )}
+                    {details.serviceDuration && (
+                      <p className="uniqueCart-serviceDetail">
+                        Duración: {details.serviceDuration} minutos
+                      </p>
+                    )}
+                    {details.serviceIntensity && (
+                      <p className="uniqueCart-serviceDetail">
+                        Intensidad: {details.serviceIntensity}
+                      </p>
+                    )}
+                    {/* Información de envío/recogida (solo si existe) */}
+                    {details.shippingInfo && (
+                      <div className="uniqueCart-shipping">
+                        <p>
+                          <strong>Nombre:</strong> {details.shippingInfo.name}
+                        </p>
+                        <p>
+                          <strong>Email:</strong> {details.shippingInfo.email}
+                        </p>
+                        <p>
+                          <strong>Teléfono:</strong> {details.shippingInfo.phone}
+                        </p>
+                        <p>
+                          <strong>Dirección:</strong> {details.shippingInfo.address}
+                        </p>
+                        {details.shippingInfo.deliveryTime && (
+                          <p>
+                            <strong>Hora de entrega:</strong> {details.shippingInfo.deliveryTime}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    <div className="uniqueCart-quantity">
+                      <label>
+                        <strong>Cantidad:</strong>{" "}
+                        <input
+                          type="number"
+                          min="1"
+                          value={qty}
+                          onChange={(e) =>
+                            handleChangeQty(item.productId, +e.target.value)
+                          }
+                          className="uniqueCart-quantityInput"
+                        />
+                      </label>
+                    </div>
+                    <div className="uniqueCart-price">
+                      <p className="uniqueCart-totalPrice">
+                        Subtotal: {formatCOP(subtotal)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="uniqueCart-summary">
+            <h3 className="uniqueCart-totalAmount">
+              Total en COP: {formatCOP(totalCOP)}
+            </h3>
+            <h3 className="uniqueCart-totalAmount">
+              Equivalente en USD: ${totalUSD}
+            </h3>
+            <div className="uniqueCart-depositContainer">
+              <p className="uniqueCart-depositText">** Solo pagarás el 20% (reserva) **</p>
+              <h4 className="uniqueCart-depositAmount">
+                Reserva (20%): {formatCOP(depositCOP)} / ${depositUSD} USD
+              </h4>
+            </div>
+
+            <div className="uniqueCart-buttonsContainer">
+              <div className="uniqueCart-buttonItem">
+                <PayPalPayment
+                  product={{
+                    description: "Reserva 20% - PayPal",
+                    cost: depositUSD,
+                  }}
+                />
+              </div>
+              <div className="uniqueCart-buttonItem">
+                <PayPalPaymentCard
+                  product={{
+                    description: "Reserva 20% - Tarjeta",
+                    cost: depositUSD,
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default Cart;

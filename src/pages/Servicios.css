@@ -1,0 +1,128 @@
+:root {
+  --dorado-suave: #D4AF37;
+  --beige-claro: #F5F5DC;
+  --blanco-roto: #FAF9F6;
+  --gris-perla: #C0C0C0;
+  --text-color: #333;
+  --font-family: 'Arial', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+.bronceado-section {
+  background-color: var(--beige-claro);
+}
+.bronceado-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.bronceado-text-center {
+  text-align: center;
+  margin-bottom: 40px;
+}
+.bronceado-badge {
+  display: inline-block;
+  color: #282828;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 2rem;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+.bronceado-heading {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  color: var(--dorado-suave);
+  font-family: var(--font-family);
+}
+.bronceado-description {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--text-color);
+  max-width: 800px;
+  margin: 0 auto;
+  font-family: var(--font-family);
+}
+
+
+.vertical-card-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 24px;  /* Más espacio alrededor del grid */
+}
+
+
+
+.map-section {
+  padding: 3rem 2rem;
+  background: var(--blanco-roto);
+  font-family: 'Arial', sans-serif;
+  color: var(--text-color);
+}
+
+.map-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.map-info {
+  margin-bottom: 1.5rem;
+}
+
+.map-info h2 {
+  font-size: 2rem;
+  color: var(--dorado-suave);
+  margin-bottom: 0.5rem;
+}
+
+.map-info p {
+  font-size: 1.1rem;
+  margin-bottom: 0.3rem;
+}
+
+.contact-map {
+  width: 100%;
+  height: 450px;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+
+
+@media (max-width: 768px) {
+  .bronceado-heading {
+    font-size: 2rem;
+  }
+
+.contact-map {
+  height: 300px;
+}
+  
+  .bronceado-description {
+    font-size: 1rem;
+    padding: 0 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .bronceado-heading {
+    font-size: 1.75rem;
+  }
+  
+  .bronceado-badge {
+    font-size: 0.8rem;
+    padding: 4px 10px;
+  }
+  .map-info h2 {
+    font-size: 1.75rem;
+  }
+  .map-info p {
+    font-size: 1rem;
+  }
+  .contact-map {
+    height: 250px;
+  }
+}

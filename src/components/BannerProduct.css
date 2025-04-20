@@ -1,0 +1,52 @@
+.banner-container {
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .slider {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  .nav-button {
+    background: transparent;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    z-index: 2;
+    color: #333;
+  }
+  
+  .slides {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+    width: 100%;
+  }
+  
+  .slide {
+    min-width: 100%;
+    position: relative;
+  }
+  
+  .slide img {
+    width: 100%;
+    height: 300px;  
+    object-fit: cover;
+  }
+  
+  .slide img.mobile {
+    display: none;
+  }
+  
+  @media (max-width: 768px) {
+    .slide img.desktop {
+      display: none;
+    }
+  
+    .slide img.mobile {
+      display: block;
+    }
+  }
+  

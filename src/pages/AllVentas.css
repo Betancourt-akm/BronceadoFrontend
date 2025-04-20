@@ -1,0 +1,97 @@
+:root {
+    --dorado-suave: #D4AF37;
+    --accent-color: #B8982B;
+    --blanco-roto: #FAF9F6;
+    --text-color: #282828;
+  }
+  
+  /* Contenedor principal */
+  .ventas-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    background-color: var(--blanco-roto);
+    font-family: Arial, sans-serif;
+    color: var(--text-color);
+  }
+  
+  /* Encabezado */
+  .ventas-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .ventas-header h2 {
+    font-size: 2rem;
+    color: var(--dorado-suave);
+  }
+  
+  /* Botón para agregar venta */
+  .add-button {
+    background-color: var(--dorado-suave);
+    color: var(--blanco-roto);
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .add-button:hover {
+    background-color: var(--accent-color);
+  }
+  
+  /* Tabla de ventas */
+  .ventas-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 2rem;
+  }
+  
+  .ventas-table th,
+  .ventas-table td {
+    border: 1px solid #ddd;
+    padding: 0.75rem;
+    text-align: center;
+  }
+  
+  .ventas-table th {
+    background-color: rgba(212, 175, 55, 0.1);
+    color: var(--text-color);
+    font-weight: bold;
+  }
+  
+  /* Botones de acción */
+  .action-button {
+    background-color: var(--dorado-suave);
+    color: var(--blanco-roto);
+    padding: 0.4rem 0.8rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 0.5rem;
+    transition: background-color 0.3s ease;
+  }
+  
+  .action-button:hover {
+    background-color: var(--accent-color);
+  }
+  
+  .action-button.delete {
+    background-color: #e74c3c;
+  }
+  
+  .action-button.delete:hover {
+    background-color: #c0392b;
+  }
+  
+  /* Modal placeholder */
+  .modal-placeholder {
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 1rem;
+    text-align: center;
+    border-radius: 8px;
+  }
+  

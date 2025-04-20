@@ -1,0 +1,240 @@
+import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import SummaryApi from '../common';
+import displayCOPCurrency from '../helpers/displayCurrency';
+import { MdSpa } from 'react-icons/md';
+import './ProductDetails.css';
+import { useDispatch } from 'react-redux';
+import { addToCart } from '../store/cartSlice';
+import PropTypes from 'prop-types';
+
+const ProductDetails = () => {
+  const [data, setData] = useState({
+    productName: '',
+    brandName: '',
+    category: '',
+    productImage: [],
+    description: '',
+    price: 0,
+    sellingPrice: 0,
+    stock: 0,
+    // Para servicios
+    serviceDuration: 0,
+    serviceIntensity: '',
+    serviceRecommendations: '',
+    serviceAdditionalBenefits: '',
+    serviceDiscountsPromotions: '',
+  });
+  const [loading, setLoading] = useState(true);
+  const [activeImage, setActiveImage] = useState('');
+  const [zoomImageCoordinate, setZoomImageCoordinate] = useState({ x: 0, y: 0 });
+  const [zoomImage, setZoomImage] = useState(false);
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedTime, setSelectedTime] = useState('');
+
+  const params = useParams();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  // Fecha actual para limitar el input de fecha
+  const todayDate = new Date().toISOString().split('T')[0];
+
+  // Función para obtener los detalles del producto
+  const fetchProductDetails = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(SummaryApi.productDetails.url, {
+        method: SummaryApi.productDetails.method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: params?.id }),
+      });
+      const dataResponse = await response.json();
+      const fetchedData = dataResponse?.data || {};
+      setData(fetchedData);
+      setActiveImage(fetchedData?.productImage?.[0] || '/default-image.jpg');
+    } catch (error) {
+      console.error('Error al obtener detalles del producto:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProductDetails();
+  }, [params]);
+
+  // Manejo de cambio de imagen al pasar el mouse o hacer clic
+  const handleMouseEnterImage = (imgURL) => {
+    setActiveImage(imgURL);
+  };
+
+  // Función para el zoom de la imagen
+  const handleZoomImage = useCallback((e) => {
+    setZoomImage(true);
+    const { left, top, width, height } = e.target.getBoundingClientRect();
+    const x = (e.clientX - left) / width;
+    const y = (e.clientY - top) / height;
+    setZoomImageCoordinate({ x, y });
+  }, []);
+
+  const handleLeaveImageZoom = () => {
+    setZoomImage(false);
+  };
+
+  // Manejo de reserva para servicios
+  const handleReservationSubmit = (e) => {
+    e.preventDefault();
+    if (!selectedDate || !selectedTime) {
+      alert('Por favor, selecciona una fecha y una hora para reservar.');
+      return;
+    }
+    if (data.stock <= 0) {
+      alert('Lo sentimos, este servicio no está disponible.');
+      return;
+    }
+    // Para servicios, se utiliza el precio de venta y se toman los datos básicos
+    const reservationInfo = {
+      productName: data.productName,
+      productImage: data.productImage[0] || '',
+      category: data.category,
+      reservationDate: selectedDate,
+      reservationTime: selectedTime,
+      totalPrice: data.sellingPrice,
+      // Puedes agregar otros detalles relevantes, como duración o intensidad.
+    };
+    // Despachar la acción para agregar al carrito con la info de reserva
+    dispatch(addToCart({ productId: data._id, reservationDetails: reservationInfo }));
+    navigate('/cart');
+  };
+
+  // Manejo para agregar al carrito para compras (no servicios)
+  const handleAddToCart = () => {
+    // Se envía el producto completo (ajusta según tu lógica)
+    dispatch(addToCart({ productId: data._id, productDetails: data }));
+    navigate('/cart');
+  };
+
+  return (
+    <div className="product-details-container">
+      {loading ? (
+        <p className="loading-text">Cargando detalles...</p>
+      ) : (
+        <div className="product-details-wrapper">
+          {/* LEFT: Galería de imágenes */}
+          <div className="left-section">
+            <div className="product-images">
+              <div
+                className="product-main-image"
+                onMouseLeave={handleLeaveImageZoom}
+              >
+                <img
+                  src={activeImage}
+                  className="main-image"
+                  onMouseMove={handleZoomImage}
+                  alt={data.productName || 'Servicio'}
+                />
+                {zoomImage && activeImage && (
+                  <div className="zoomed-image">
+                    <div
+                      className="zoomed-content"
+                      style={{
+                        backgroundImage: `url(${activeImage})`,
+                        backgroundPosition: `${zoomImageCoordinate.x * 100}% ${zoomImageCoordinate.y * 100}%`,
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+              <div className="product-thumbnails">
+                {data.productImage.map((imgURL, idx) => (
+                  <img
+                    key={idx}
+                    src={imgURL}
+                    className="thumbnail-image"
+                    onMouseEnter={() => handleMouseEnterImage(imgURL)}
+                    onClick={() => handleMouseEnterImage(imgURL)}
+                    alt={`Miniatura ${idx + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+          {/* RIGHT: Información y Reserva/Compra */}
+          <div className="right-section">
+            <div className="product-info">
+              {data.brandName && <p className="brand-name">{data.brandName}</p>}
+              <h2 className="product-title">{data.productName}</h2>
+              <p className="product-category">{data.category}</p>
+              <div className="product-pricing">
+                <p className="selling-price">{displayCOPCurrency(data.sellingPrice)}</p>
+                {data.price > data.sellingPrice && (
+                  <p className="original-price">{displayCOPCurrency(data.price)}</p>
+                )}
+              </div>
+              <p className="product-description">{data.description}</p>
+              {data.category.toLowerCase().includes('servicio') && (
+                <div className="service-details">
+                  <p>
+                    Duración: {data.serviceDuration ? `${data.serviceDuration} minutos` : 'No especificado'}
+                  </p>
+                  <p>
+                    Intensidad: {data.serviceIntensity || 'No especificado'}
+                  </p>
+                  <p>
+                    Recomendaciones: {data.serviceRecommendations || 'No especificado'}
+                  </p>
+                </div>
+              )}
+            </div>
+            {data.category.toLowerCase().includes('servicio') ? (
+              <div className="reservation-form">
+                <h3 className="form-heading">Reserva tu Servicio</h3>
+                <form onSubmit={handleReservationSubmit}>
+                  <div className="form-group">
+                    <label htmlFor="reservation-date">Fecha:</label>
+                    <input
+                      type="date"
+                      id="reservation-date"
+                      value={selectedDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      min={todayDate}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="reservation-time">Hora:</label>
+                    <input
+                      type="time"
+                      id="reservation-time"
+                      value={selectedTime}
+                      onChange={(e) => setSelectedTime(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <button type="submit" className="reserve-button">
+                    Reservar Servicio
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <div className="purchase-section">
+                <button
+                  className="add-to-cart-button"
+                  onClick={handleAddToCart}
+                >
+                  Agregar al Carrito
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+ProductDetails.propTypes = {
+  // Puedes definir PropTypes adicionales si lo consideras necesario
+};
+
+export default ProductDetails;
