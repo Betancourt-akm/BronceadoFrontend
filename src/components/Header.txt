@@ -1,0 +1,365 @@
+import { useContext, useEffect, useState } from 'react';
+import {
+  AppBar,
+  Box,
+  Divider,
+  Drawer,
+  IconButton,
+  Toolbar,
+  Menu,
+  MenuItem,
+  Button,
+} from '@mui/material';
+import { GrSearch } from 'react-icons/gr';
+import { FaRegCircleUser, FaWpforms } from 'react-icons/fa6';
+import MenuIcon from '@mui/icons-material/Menu';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
+
+import SummaryApi from '../common';
+import { setUserDetails } from '../store/userSlice';
+import Context from '../context/index';
+import Logo from './Logo';
+
+import './Header.css';
+
+import fetchCategoryWiseProduct from '../helpers/fetchCategoryWiseProduct';
+
+const Header = () => {
+  // Estados y contextos
+  const user = useSelector((state) => state?.user?.user);
+  const dispatch = useDispatch();
+  const context = useContext(Context);
+  const navigate = useNavigate();
+
+  const [menuDisplay, setMenuDisplay] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [anchorElMotos, setAnchorElMotos] = useState(null);
+
+  // Estados para productos
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Funciones de manejo de eventos
+  const handleLogout = async () => {
+    const response = await fetch(SummaryApi.logout_user.url, {
+      method: SummaryApi.logout_user.method,
+      credentials: 'include',
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      toast.success(data.message);
+      dispatch(setUserDetails(null));
+      navigate('/');
+    } else if (data.error) {
+      toast.error(data.message);
+    }
+  };
+
+  const handleSearch = (e) => {
+    const { value } = e.target;
+    setSearch(value);
+
+    if (value) {
+      navigate(`/search?q=${value}`);
+    } else {
+      navigate('/search');
+    }
+  };
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
+  // Funciones para el menú desplegable 'Motos'
+  const handleMotosMenuOpen = (event) => {
+    setAnchorElMotos(event.currentTarget);
+  };
+
+  const handleMotosMenuClose = () => {
+    setAnchorElMotos(null);
+  };
+
+  // Fetch de productos de la categoría 'Motos'
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const categoryProduct = await fetchCategoryWiseProduct('Motos');
+        if (categoryProduct && categoryProduct.data) {
+          setData(categoryProduct.data);
+          console.log('Productos obtenidos en Header:', categoryProduct.data);
+        } else {
+          setData([]);
+          console.log('No se encontraron productos en la categoría especificada.');
+        }
+      } catch (error) {
+        console.error('Error al obtener los productos:', error);
+        setData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Contenido del drawer para móvil
+  const drawer = (
+    <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center', color: 'black' }}>
+      <Link to="/" sx={{ flexGrow: 1 }}>
+        <Logo />
+      </Link>
+      <Divider />
+      <ul className="mobile-navigation">
+        <li>
+          <NavLink to="/">Home</NavLink>
+        </li>
+        <li>
+          <NavLink to="/motos">Motos</NavLink>
+        </li>
+        <li>
+          <NavLink to="/seguros">Seguros</NavLink>
+        </li>
+        <li>
+          <NavLink to="/requisitos4rent">Requisitos</NavLink>
+        </li>
+        <li>
+          <NavLink to="/condiciones4rent">Condiciones</NavLink>
+        </li>
+        <li>
+          <NavLink to="/rentar">Rentar</NavLink>
+        </li>
+      </ul>
+    </Box>
+  );
+
+  return (
+    <>
+      {/* Barra de navegación principal */}
+      <AppBar component="nav" position="static" sx={{ bgcolor: 'white', height: '70px' }}>
+        <Toolbar sx={{ justifyContent: 'space-between' }}>
+          {/* Icono de menú para móvil */}
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            edge="start"
+            sx={{
+              color: 'black',
+              mr: 2,
+              display: { sm: 'none' },
+            }}
+            onClick={handleDrawerToggle}
+          >
+            <MenuIcon />
+          </IconButton>
+
+          {/* Logo */}
+          <Link to="/" className="logo-container" sx={{ flexGrow: 1 }}>
+            <Logo />
+          </Link>
+
+          {/* Barra de búsqueda */}
+          <div className="search-bar" sx={{ flexGrow: 1 }}>
+            <input
+              type="text"
+              placeholder="Buscar moto 4rent..."
+              className="search-input"
+              onChange={handleSearch}
+              value={search}
+            />
+            <div className="search-button">
+              <GrSearch />
+            </div>
+          </div>
+
+          {/* Navegación para escritorio */}
+          <Box
+            sx={{
+              display: { xs: 'none', sm: 'flex' },
+              alignItems: 'center',
+              color: 'black',
+              
+            }}
+          >
+            <Button
+              color="inherit"
+              onClick={handleMotosMenuOpen}
+              aria-controls="motos-menu"
+              aria-haspopup="true"
+              sx={{ textTransform: 'none', fontSize: '1rem' }} // Evita el texto en mayúsculas
+            >
+              Motos
+            </Button>
+            <Menu
+              id="motos-menu"
+              anchorEl={anchorElMotos}
+              open={Boolean(anchorElMotos)}
+              onClose={handleMotosMenuClose}
+              sx={{ '& .MuiMenuItem-root': { textTransform: 'none', fontSize: '1rem' } }} // Evita el texto en mayúsculas en el menú
+
+            >
+              {loading ? (
+                <MenuItem>Cargando...</MenuItem>
+              ) : data.length > 0 ? (
+                data.map((product) => (
+                  <MenuItem
+                    key={product._id}
+                    onClick={handleMotosMenuClose}
+                    component={Link}
+                    to={`/product/${product._id}`}
+                  >
+                    {product.productName}
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem>No hay productos</MenuItem>
+              )}
+            </Menu>
+
+            <NavLink to="/">
+              <Button color="inherit" sx={{ textTransform: 'none' , fontSize: '1rem' }}>Home</Button>
+            </NavLink>
+        
+          </Box>
+
+          {/* Acciones del header */}
+          <div className="header-actions">
+            {/* Menú de usuario */}
+            <div className="user-menu">
+              {user?._id && (
+                <div
+                  className="user-icon"
+                  onClick={() => setMenuDisplay((prev) => !prev)}
+                >
+                  {user?.profilePic ? (
+                    <img
+                      src={user?.profilePic}
+                      className="profile-pic"
+                      alt={user?.name}
+                    />
+                  ) : (
+                    <FaRegCircleUser />
+                  )}
+                </div>
+              )}
+
+              {menuDisplay && (
+                <div className="menu-dropdown">
+                  <nav>
+                    {user?.role === 'ADMIN' ? (
+                      <>
+                        <Link
+                          to="/admin-panel/all-products"
+                          onClick={() => setMenuDisplay(false)}
+                        >
+                          Panel de Admin
+                        </Link>
+                        <Link
+                          to="/admin-panel/all-users"
+                          onClick={() => setMenuDisplay(false)}
+                        >
+                          Todos los Usuarios
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                
+                      </>
+                    )}
+                  </nav>
+                </div>
+              )}
+            </div>
+
+            {/* Carrito de compras */}
+            {user?._id && (
+              <Link to="/cart" className="cart-link">
+                <span>
+                  <FaWpforms />
+                </span>
+                <div className="cart-count">
+                  <p>{context?.cartProductCount}</p>
+                </div>
+              </Link>
+            )}
+
+            {/* Botón de Login/Logout */}
+            <div className="auth-button">
+              {user?._id ? (
+                <button onClick={handleLogout}>Logout</button>
+              ) : (
+                <Link to="/login">Login</Link>
+              )}
+            </div>
+          </div>
+        </Toolbar>
+      </AppBar>
+
+      {/* Menú horizontal justo debajo del navbar */}
+      <Box
+        sx={{
+          display: { xs: 'none', sm: 'block' },
+          bgcolor: '#f0f0f0',
+          padding: '10px',
+          borderBottom: '1px solid #ccc',
+        }}
+      >
+        <ul className="navigation-menu-horizontal">
+          <li>
+            <NavLink to="/">Home</NavLink>
+          </li>
+          <li>
+            <NavLink to="/motos">Motos</NavLink>
+          </li>
+          <li>
+            <NavLink to="/seguros">Seguros</NavLink>
+          </li>
+          <li>
+            <NavLink to="/requisitos4rent">Requisitos</NavLink>
+          </li>
+          <li>
+            <NavLink to="/condiciones4rent">Condiciones</NavLink>
+          </li>
+          <li>
+            <NavLink to="/rentar">Rentar</NavLink>
+          </li>
+        </ul>
+      </Box>
+
+      {/* Drawer para móvil */}
+      <Box component="nav">
+        <Drawer
+          variant="temporary"
+          open={mobileOpen}
+          onClose={handleDrawerToggle}
+          ModalProps={{
+            keepMounted: true, // Mejora el rendimiento en móviles
+          }}
+          sx={{
+            display: { xs: 'block', sm: 'none' },
+            '& .MuiDrawer-paper': {
+              boxSizing: 'border-box',
+              width: '220px',
+              color: 'black',
+            },
+          }}
+        >
+          {drawer}
+        </Drawer>
+      </Box>
+
+      {/* Espaciador para el AppBar */}
+      {/* Elimina este espaciador si no es necesario */}
+      {/* <Box>
+        <Toolbar />
+      </Box> */}
+    </>
+  );
+};
+
+export default Header;

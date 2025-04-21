@@ -1,0 +1,98 @@
+// src/components/PayPalPaymentCard.jsx
+
+import React from "react";
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+import { toast } from "react-toastify";
+import SummaryApi from "../common";
+import { useNavigate } from "react-router-dom";
+
+const PayPalPaymentCard = ({ product }) => {
+  const navigate = useNavigate();
+
+  // El clientId proviene de tu variable .env
+  const clientId = process.env.REACT_APP_PAYPAL_CLIENT_ID || "";
+
+  // Importante: agregar 'components=buttons' y si deseas 'fundingSource=card' sin hosted fields, 
+  // bastará con 'buttons'.
+  const initialOptions = {
+    "client-id": clientId,
+    currency: "USD",
+    components: "buttons", 
+  };
+
+  // Función que crea la orden en el backend
+  const createOrder = () => {
+    return fetch(SummaryApi.createOrder.url, {
+      method: SummaryApi.createOrder.method, // POST
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        product: {
+          description: product?.description || "Producto sin descripción",
+          cost: product?.cost,
+        },
+      }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Error al crear la orden");
+        }
+        return response.json();
+      })
+      .then((order) => {
+        // order.id es el ID de la orden de PayPal
+        if (!order.id) {
+          throw new Error("La respuesta no contiene un order id");
+        }
+        return order.id;
+      })
+      .catch((error) => {
+        toast.error("Error al crear la orden de pago");
+        throw error;
+      });
+  };
+
+  const onApprove = (data) => {
+    // data.orderID es el ID de la orden
+    return fetch(SummaryApi.captureOrder.url, {
+      method: SummaryApi.captureOrder.method, // POST
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderID: data.orderID }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Error al capturar el pago");
+        }
+        return response.json();
+      })
+      .then((details) => {
+        toast.success("¡Pago con tarjeta exitoso!");
+        navigate("/payment-success");
+      })
+      .catch((error) => {
+        toast.error("El pago falló, intenta nuevamente.");
+        navigate("/payment-failure");
+      });
+  };
+
+  const onError = (err) => {
+    toast.error("Ocurrió un error en el procesamiento del pago con tarjeta.");
+    console.error("onError =>", err);
+    navigate("/payment-failure");
+  };
+
+  return (
+    <PayPalScriptProvider options={initialOptions}>
+      <div>
+        <PayPalButtons
+          fundingSource="card" // <= Esto forza el botón a ser 'Card'
+          style={{ layout: "horizontal" }}
+          createOrder={createOrder}
+          onApprove={onApprove}
+          onError={onError}
+        />
+      </div>
+    </PayPalScriptProvider>
+  );
+};
+
+export default PayPalPaymentCard;
