@@ -1,0 +1,5 @@
+const productCategory = [
+    { id : 1, label : "Moto página de inicio", value : "Moto página de inicio"},
+    { id : 2, label : "Moto", value : "Moto"},
+]
+export default productCategory
