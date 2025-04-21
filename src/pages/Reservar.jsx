@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import fetchCategoryWiseProduct from '../helpers/fetchCategoryWiseProduct';
-import './reservar.css';
+import './Reservar.css';
 
 const Reservar = () => {
   const [services, setServices] = useState([]);
