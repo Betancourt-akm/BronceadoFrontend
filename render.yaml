@@ -1,11 +1,12 @@
 services:
-  - type: static           # en vez de `web` + `runtime: static`, usa directamente static
+  - type: web
     name: mi-frontend
     repo: https://github.com/Betancourt-akm/BronceadoFrontend
     branch: main
+    runtime: static
     buildCommand: npm run build
     staticPublishPath: build
     routes:
       - type: rewrite
-        source: "/*"       # <— atrapa TODO ruta
+        source: "/*"
         destination: "/index.html"
