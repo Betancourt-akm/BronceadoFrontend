@@ -1,4 +1,4 @@
-const backendDomain = 'https://bronceadospabronze.onrender.com';
+const backendDomain = 'https://bronceado.onrender.com';
 // Cambia esta URL según necesites https://fourrent-dq5t.onrender.com
 if (!backendDomain) {
     throw new Error("REACT_APP_BACKEND_URL no está definido en las variables de entorno.");
